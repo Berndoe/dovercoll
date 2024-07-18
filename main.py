@@ -4,14 +4,12 @@ Author: Bernd Opoku-Boadu
 import datetime
 import threading
 import time
-
 from flask import Flask, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, db
 from flask_cors import CORS
 from classes.firebase_user_manager import FirebaseManager
 from geopy.distance import geodesic
-
 
 # initialise flask app
 app = Flask(__name__)
@@ -30,12 +28,10 @@ waste_collector_manager = FirebaseManager('collectors')
 MAX_DISTANCE_KM = 15
 PRICE = 20
 DISCOUNT_FACTOR = 0.1
-RESPONSE_WAIT_TIME = 30
-
+RESPONSE_WAIT_TIME = 10
 
 
 # problem: register stores password
-
 
 @app.route('/users', methods=['POST'])
 def register_user():
@@ -83,7 +79,7 @@ def get_users():
 @app.route('/collectors', methods=['GET'])
 def get_collectors():
     try:
-        user_data = user_manager.get()
+        user_data = waste_collector_manager.get()
         return jsonify({
             "collectors": user_data
         }), 200
@@ -133,7 +129,7 @@ def update_user(uid):
 def update_collector(cid):
     try:
         user_data = request.json
-        if user_manager.update(cid, user_data):
+        if waste_collector_manager.update(cid, user_data):
             return jsonify({"message": "Collector updated successfully"}), 200
         else:
             return jsonify({"message": "Collector not found"}), 404
@@ -192,31 +188,35 @@ def order_collection_service():
     try:
         booking_data = request.json
         user_id = booking_data.get('user_id')
-        pickup_location = booking_data.get('location')
+        pickup_location = booking_data.get('pickup_location')
         number_of_bins = booking_data.get('number_of_bins')
         price = number_of_bins * PRICE
 
         if not user_id or not pickup_location:
             return jsonify({"error": "User ID and pickup location required"}), 400
 
-        user_location = (pickup_location['pickup_latitude'], pickup_location['pickup_longitude'])
+        user_location = (pickup_location['latitude'], pickup_location['longitude'])
         nearby_waste_collectors = find_nearby_collectors(user_location)
 
-        print("Nearby drivers: " + str(nearby_waste_collectors))
         if not nearby_waste_collectors:
-            return jsonify({"error": "No drivers available nearby. "
+            return jsonify({"error": "No collectors available nearby. "
                                      "Try calling from the driver section"}), 404
 
         booking_data['status'] = 'pending'
 
         booking_id = user_manager.create_booking(booking_data)
+        booking_data.update({
+            'booking_id': booking_id,
+            'status': 'pending',
+            'price': price if number_of_bins <= 2 else (price - (price * DISCOUNT_FACTOR)),
+            'time_requested': datetime.datetime.now().isoformat()
+        })
 
-        notify_waste_collectors(nearby_waste_collectors, booking_data)
         threading.Thread(target=wait_for_collector_response, args=(booking_id,)).start()
 
         return jsonify({"booking_id": booking_id, "nearby_waste_collectors": nearby_waste_collectors,
-                        "price": price if number_of_bins <= 2 else (price - (price * DISCOUNT_FACTOR)),
-                        "time_requested": datetime.datetime.now()}), 201
+                        "price": booking_data['price'],
+                        "time_requested": booking_data['time_requested']}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -229,10 +229,10 @@ def find_nearby_collectors(user_location):
 
     if collectors:
         for collector_id, collector_data in collectors.items():
-            if 'location' in collector_data and collector_data['location']:
+            if 'pickup_location' in collector_data and collector_data['pickup_location']:
                 collector_location = (
-                    collector_data['location']['latitude'],
-                    collector_data['location']['longitude']
+                    collector_data['pickup_location']['latitude'],
+                    collector_data['pickup_location']['longitude']
                 )
 
                 distance = geodesic(user_location, collector_location).km
@@ -241,6 +241,7 @@ def find_nearby_collectors(user_location):
                     nearby_collectors.append({"collector_id": collector_id, "distance": distance})
 
     return sorted(nearby_collectors, key=lambda k: k['distance'])
+
 
 @app.route('/collectors/respond', methods=['POST'])
 def collector_response():
@@ -257,33 +258,22 @@ def collector_response():
         if not booking_data or booking_data.get('status') != 'pending':
             return jsonify({"error": "Invalid or non-pending booking ID"}), 404
 
-        user_manager.update_booking(booking_id, {'collector_id': collector_id, 'status': 'ongoing'}), 200
+        if booking_data.get('status') == 'ongoing':
+            return jsonify({"error": "Collector already assigned to booking"}), 400
 
-        return jsonify({"message": "Booking accepted", "booking_id": booking_id})
+        user_manager.update_booking(booking_id, {'collector_id': collector_id, 'status': 'ongoing'})
+
+        return jsonify({"message": "Booking accepted", "booking_id": booking_id}), 200
 
     except Exception as e:
-        return jsonify({"Error in collector response": str(e)}), 400
+        return jsonify({"error": f"Error in collector response: {str(e)}"}), 400
 
-def notify_waste_collectors(nearby_collectors, booking_data):
-    def notify_collector(collector):
-        notification_body = {
-            "app_id": ""
-        }
-        response = ""
-
-    threads = [threading.Thread(target=notify_collector, args=(collector,))
-               for collector in nearby_collectors]
-
-    for thread in threads:
-        thread.start()
-
-    for thread in threads:
-        thread.join()
 
 def wait_for_collector_response(booking_id):
     time.sleep(RESPONSE_WAIT_TIME)
     booking_data = user_manager.get_booking(booking_id)
     if booking_data and booking_data.get('status') == 'pending':
+        print("Booking data " + str(booking_data))
         user_manager.cancel_booking(booking_id)
 
 
