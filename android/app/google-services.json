@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "77396121216",
+    "project_id": "dovercoll-623b6",
+    "storage_bucket": "dovercoll-623b6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:77396121216:android:2d6448d76cf209b6dc3865",
+        "android_client_info": {
+          "package_name": "com.example.uber_clone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUrQTNx4BbotncNyYDXbgJiOAFrsFtxgk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
