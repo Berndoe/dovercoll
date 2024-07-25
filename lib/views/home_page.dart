@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:capstone/controllers/booking_controller.dart';
 import 'package:capstone/controllers/user_controller.dart';
 import 'package:capstone/models/user_model.dart';
@@ -6,10 +8,6 @@ import 'package:capstone/services/booking_service.dart';
 import 'package:capstone/services/user_service.dart';
 import 'package:capstone/utils/constants.dart';
 import 'package:capstone/utils/helpers.dart';
-import 'package:capstone/views/profile_page.dart';
-import 'package:capstone/views/sustainable_practices.dart';
-import 'package:capstone/views/user_history.dart';
-import 'package:capstone/views/waste_collectors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
@@ -25,7 +23,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late BookingService _bookingService;
   late BookingController _bookingController;
   late UserService _userService;
@@ -48,22 +46,17 @@ class _HomePageState extends State<HomePage> {
   String _distance = '';
   String _duration = '';
   String bookingId = '';
+
+  TabController? _tabController;
   int _currentIndex = 0;
 
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
 
-  final List<Widget> _pages = [
-    HomePage(),
-    const WasteCollectors(),
-    const WastePractices(),
-    ProfilePage(profileType: ProfileType.user),
-    UserHistory(),
-  ];
-
   void changePage(int index) {
     setState(() {
       _currentIndex = index;
+      _tabController!.index = _currentIndex;
     });
   }
 
@@ -83,7 +76,7 @@ class _HomePageState extends State<HomePage> {
           CameraPosition(
             target:
                 LatLng(currentLocation.latitude!, currentLocation.longitude!),
-            zoom: 15,
+            zoom: 17,
           ),
         ),
       );
@@ -115,6 +108,8 @@ class _HomePageState extends State<HomePage> {
     _userService = UserService(_apiService);
     _userController = UserController(_userService);
     _user = _userController.viewAccount(userId);
+
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -149,9 +144,7 @@ class _HomePageState extends State<HomePage> {
         if (collectorLocation != null) {
           try {
             var directions = await Helpers.getDirections(
-              LatLng(pickUpLat!, pickUpLng!),
-              collectorLocation,
-            );
+                LatLng(pickUpLat!, pickUpLng!), collectorLocation);
 
             PolylinePoints polylinePoints = PolylinePoints();
             List<PointLatLng> locationPoints =
@@ -159,7 +152,8 @@ class _HomePageState extends State<HomePage> {
 
             setState(() {
               _distance = directions.distanceText;
-              _duration = directions.durationText;
+              _duration = '${directions.durationText}';
+
               _polylines.add(Polyline(
                 polylineId: const PolylineId('route'),
                 points: locationPoints
@@ -169,6 +163,7 @@ class _HomePageState extends State<HomePage> {
                 width: 5,
               ));
               _markers.add(Marker(
+                flat: true,
                 markerId: const MarkerId('collector'),
                 position: collectorLocation,
                 infoWindow: const InfoWindow(
@@ -179,28 +174,29 @@ class _HomePageState extends State<HomePage> {
               _isDriverDetailsVisible = true;
             });
 
-            _mapController?.animateCamera(
-              CameraUpdate.newLatLngBounds(
-                LatLngBounds(
-                  southwest: LatLng(
-                    locationPoints
-                        .map((point) => point.latitude)
-                        .reduce((a, b) => a < b ? a : b),
-                    locationPoints
-                        .map((point) => point.longitude)
-                        .reduce((a, b) => a < b ? a : b),
-                  ),
-                  northeast: LatLng(
-                    locationPoints
-                        .map((point) => point.latitude)
-                        .reduce((a, b) => a > b ? a : b),
-                    locationPoints
-                        .map((point) => point.longitude)
-                        .reduce((a, b) => a > b ? a : b),
-                  ),
-                ),
-                50,
+            // Calculate the bounds for the polyline
+            LatLngBounds bounds = LatLngBounds(
+              southwest: LatLng(
+                locationPoints
+                    .map((point) => point.latitude)
+                    .reduce((a, b) => a < b ? a : b),
+                locationPoints
+                    .map((point) => point.longitude)
+                    .reduce((a, b) => a < b ? a : b),
               ),
+              northeast: LatLng(
+                locationPoints
+                    .map((point) => point.latitude)
+                    .reduce((a, b) => a > b ? a : b),
+                locationPoints
+                    .map((point) => point.longitude)
+                    .reduce((a, b) => a > b ? a : b),
+              ),
+            );
+
+            // Animate camera to fit the bounds
+            _mapController?.animateCamera(
+              CameraUpdate.newLatLngBounds(bounds, 50),
             );
           } catch (e) {
             print(e);
@@ -265,7 +261,7 @@ class _HomePageState extends State<HomePage> {
             GoogleMap(
               initialCameraPosition: const CameraPosition(
                 target: LatLng(0.0, 0.0),
-                zoom: 15,
+                zoom: 17,
               ),
               mapType: MapType.terrain,
               myLocationEnabled: true,
@@ -279,7 +275,7 @@ class _HomePageState extends State<HomePage> {
                       CameraPosition(
                         target: LatLng(currentLocation.latitude!,
                             currentLocation.longitude!),
-                        zoom: 15,
+                        zoom: 17,
                       ),
                     ),
                   );
@@ -341,7 +337,7 @@ class _HomePageState extends State<HomePage> {
                     });
                   },
                   child: const Text(
-                    'Cancel Booking',
+                    'Cancel Collection',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -423,36 +419,6 @@ class _HomePageState extends State<HomePage> {
               ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.car_repair_rounded),
-            label: 'Drivers',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Learn',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'My Profile',
-            backgroundColor: Colors.blue,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-            backgroundColor: Colors.blue,
-          ),
-        ],
-        onTap: changePage,
       ),
     );
   }

@@ -8,8 +8,7 @@ class Constants {
   static const String sensorsEndpoint = '/sensors';
   static const String wastePracticesEndpoint = '$baseUrl/practices';
   static const String binLevelEndpoint = '$baseUrl/get_bin_level';
-  static const String collectorsResponse =
-      '$baseUrl$collectorsEndpoint/respond';
+  static const String collectorsResponse = '/collectors/respond';
   static const String googleMapKey = "AIzaSyD5PoPVX3cV7AxDSUac18VyjJsiXk4sVpM";
   static const String placesKey = "AIzaSyCQNX55vb5N92Oe76vu_Z9Iu498q40e8WU";
   static const String pending = "pending";

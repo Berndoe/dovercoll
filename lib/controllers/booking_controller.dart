@@ -14,13 +14,13 @@ class BookingController {
     return await bookingService.fetchBooking(bookingId);
   }
 
-  createBooking(String userId, int numberOfBins,
-      dynamic pickUpLocationLongitude, dynamic pickUpLocationLatitude) async {
+  Future<Booking> createBooking(String userId, int numberOfBins,
+      dynamic pickUpLocationLatitude, dynamic pickUpLocationLongitude) async {
     var response = await bookingService.bookCollector(
       userId,
       numberOfBins,
-      pickUpLocationLongitude,
       pickUpLocationLatitude,
+      pickUpLocationLongitude,
     );
     return response;
   }

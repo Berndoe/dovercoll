@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:pay_with_paystack/pay_with_paystack.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Helpers {
   final Completer<GoogleMapController> firstController =
@@ -18,6 +20,19 @@ class Helpers {
   GoogleMapController? mapController;
 
   Position? currentUserPosition;
+  ApiService apiService = ApiService(Constants.baseUrl);
+
+  static Future<void> makePhoneCall(phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else {
+      throw 'Could not launch $phoneNumber';
+    }
+  }
 
   static Future<String> getAddress(Position position) async {
     String address = "";
@@ -28,15 +43,16 @@ class Helpers {
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body);
       address = jsonData["results"][0]["formatted_address"];
+    } else {
+      return "No address Found";
     }
     return address;
   }
 
   static Future<DirectionInformation?> getDirections(
-      LatLng userLocation, LatLng driverLocation) async {
+      LatLng userLocation, LatLng collectorLocation) async {
     String directions =
-        "https://maps.googleapis.com/maps/api/directions/json?origin=${driverLocation.longitude},"
-        " ${driverLocation.latitude}&destination=${userLocation.longitude}, ${userLocation.latitude}&key=${Constants.placesKey}";
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${collectorLocation.latitude},${collectorLocation.longitude}&destination=${userLocation.latitude},${userLocation.longitude}&key=${Constants.placesKey}";
 
     var response = await http.get(Uri.parse(directions));
 
@@ -71,7 +87,7 @@ class Helpers {
   }
 
   static Future<LatLng?> getCollectorLocation(String collectorId) async {
-    ApiService apiService = ApiService(Constants.collectorsEndpoint);
+    ApiService apiService = ApiService(Constants.baseUrl);
     WasteCollectorService wasteCollectorService =
         WasteCollectorService(apiService);
     CollectorController collectorController =
@@ -80,7 +96,7 @@ class Helpers {
     WasteCollector collectorDetails =
         await collectorController.viewAccount(collectorId);
 
-    return LatLng(collectorDetails.latitude!, collectorDetails.latitude!);
+    return LatLng(collectorDetails.latitude!, collectorDetails.longitude!);
   }
 
   // Helper function to show a snackbar
@@ -93,5 +109,49 @@ class Helpers {
   static String formatDate(String date) {
     DateTime parsedDate = DateTime.parse(date);
     return '${parsedDate.day}/${parsedDate.month}/${parsedDate.year}';
+  }
+
+  Future<void> sendBinNotification(String userId) async {
+    var response = await http.post(
+      Uri.parse('https://onesignal.com/api/v1/notifications'),
+      headers: {
+        'Authorization': 'MjA4YTllM2YtOTI2OC00NmExLThjMWQtZjkwY2U2ZjQ2MjFh',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'app_id': Constants.oneSignalID,
+        'include_player_ids': userId,
+        'headings': {'en': 'DoverColl (Bin)'},
+        'contents': {'en': 'Your bin is full'},
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print('Notification sent successfully.');
+    } else {
+      print('Failed to send notification.');
+    }
+  }
+
+  Future<void> rateCollector() async {}
+  Future<void> rateUser() async {}
+
+  static void payCollector(BuildContext context) {
+    final uniqueTransRef = PayWithPayStack().generateUuidV4();
+
+    PayWithPayStack().now(
+        context: context,
+        secretKey: "sk_live_XXXXXXXXXXXXXXXXXXX",
+        customerEmail: "popekabu@gmail.com",
+        reference: uniqueTransRef,
+        currency: "GHS",
+        amount: 20,
+        transactionCompleted: () {
+          print("Transaction Successful");
+        },
+        transactionNotCompleted: () {
+          print("Transaction Not Successful!");
+        },
+        callbackUrl: '');
   }
 }

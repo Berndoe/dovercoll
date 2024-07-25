@@ -1,3 +1,4 @@
+// profile_page.dart
 import 'package:capstone/controllers/collector_controller.dart';
 import 'package:capstone/controllers/user_controller.dart';
 import 'package:capstone/models/collector_model.dart';
@@ -6,9 +7,8 @@ import 'package:capstone/services/api_service.dart';
 import 'package:capstone/services/user_service.dart';
 import 'package:capstone/services/waste_collector_service.dart';
 import 'package:capstone/utils/constants.dart';
+import 'package:capstone/utils/profile_type.dart';
 import 'package:flutter/material.dart';
-
-enum ProfileType { user, collector }
 
 class ProfilePage extends StatefulWidget {
   final ProfileType profileType;

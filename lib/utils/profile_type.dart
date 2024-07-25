@@ -1,0 +1,1 @@
+enum ProfileType { user, collector }
