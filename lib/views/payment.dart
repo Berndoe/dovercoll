@@ -1,3 +1,4 @@
+import 'package:capstone/views/main_page.dart';
 import 'package:flutter/material.dart';
 import 'package:pay_with_paystack/pay_with_paystack.dart';
 
@@ -33,9 +34,20 @@ class _PaymentState extends State<Payment> {
                       amount: 200,
                       transactionCompleted: () {
                         print("Transaction Successful");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const UserMainPage()),
+                        );
                       },
                       transactionNotCompleted: () {
                         print("Transaction Not Successful!");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const Payment(title: 'title')),
+                        );
                       },
                       callbackUrl: '');
                 },

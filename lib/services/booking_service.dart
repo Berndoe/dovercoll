@@ -20,6 +20,22 @@ class BookingService {
     return Booking.fromJson(data);
   }
 
+  Future<List<Booking>> fetchUserHistory(String userId) async {
+    final data =
+        await apiService.get('${Constants.usersEndpoint}/$userId/history');
+    return (data as List)
+        .map((bookingJson) => Booking.fromJson(bookingJson))
+        .toList();
+  }
+
+  Future<List<Booking>> fetchCollectorHistory(String collectorId) async {
+    final data = await apiService
+        .get('${Constants.collectorsEndpoint}/$collectorId/history');
+    return (data as List)
+        .map((bookingJson) => Booking.fromJson(bookingJson))
+        .toList();
+  }
+
   Future<Booking> bookCollector(String userId, int numberOfBins,
       double pickUpLocationLatitude, double pickUpLocationLongitude) async {
     final data = await apiService.post(Constants.bookingsEndpoint, {

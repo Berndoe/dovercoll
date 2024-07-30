@@ -20,7 +20,7 @@ class Helpers {
   GoogleMapController? mapController;
 
   Position? currentUserPosition;
-  ApiService apiService = ApiService(Constants.baseUrl);
+  static ApiService apiService = ApiService(Constants.baseUrl);
 
   static Future<void> makePhoneCall(phoneNumber) async {
     final Uri launchUri = Uri(
@@ -87,7 +87,6 @@ class Helpers {
   }
 
   static Future<LatLng?> getCollectorLocation(String collectorId) async {
-    ApiService apiService = ApiService(Constants.baseUrl);
     WasteCollectorService wasteCollectorService =
         WasteCollectorService(apiService);
     CollectorController collectorController =
@@ -153,5 +152,23 @@ class Helpers {
           print("Transaction Not Successful!");
         },
         callbackUrl: '');
+  }
+
+  static Future<String> getCollectorName(String collectorId) async {
+    WasteCollectorService wasteCollectorService =
+        WasteCollectorService(apiService);
+    final data = await CollectorController(wasteCollectorService)
+        .viewAccount(collectorId);
+    final firstName = data.firstName;
+    final lastName = data.lastName;
+    return '$firstName $lastName';
+  }
+
+  static num calculatePrice(int numberOfBins) {
+    if (numberOfBins == 1) {
+      return Constants.basePrice;
+    }
+    return numberOfBins * Constants.basePrice -
+        0.1 * (numberOfBins - Constants.basePrice);
   }
 }

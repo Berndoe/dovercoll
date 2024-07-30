@@ -6,17 +6,25 @@ class BookingController {
 
   BookingController(this.bookingService);
 
-  Future<List<Booking>> getBookings() async {
-    return await bookingService.fetchBookings();
+  Future<List<Booking>> getBookings() {
+    return bookingService.fetchBookings();
   }
 
-  Future<Booking> getBooking(String bookingId) async {
-    return await bookingService.fetchBooking(bookingId);
+  Future<Booking> getBooking(String bookingId) {
+    return bookingService.fetchBooking(bookingId);
+  }
+
+  Future<List<Booking>> getUserBookings(String userId) {
+    return bookingService.fetchUserHistory(userId);
+  }
+
+  Future<List<Booking>> getCollectorBookings(String collectorId) {
+    return bookingService.fetchCollectorHistory(collectorId);
   }
 
   Future<Booking> createBooking(String userId, int numberOfBins,
-      dynamic pickUpLocationLatitude, dynamic pickUpLocationLongitude) async {
-    var response = await bookingService.bookCollector(
+      dynamic pickUpLocationLatitude, dynamic pickUpLocationLongitude) {
+    var response = bookingService.bookCollector(
       userId,
       numberOfBins,
       pickUpLocationLatitude,
@@ -25,12 +33,11 @@ class BookingController {
     return response;
   }
 
-  Future<Booking> updateBooking(
-      String bookingId, Map<String, dynamic> data) async {
-    return await bookingService.updateBooking(bookingId, data);
+  Future<Booking> updateBooking(String bookingId, Map<String, dynamic> data) {
+    return bookingService.updateBooking(bookingId, data);
   }
 
-  Future<Booking> deleteBooking(String bookingId) async {
-    return await bookingService.cancelBooking(bookingId);
+  Future<Booking> deleteBooking(String bookingId) {
+    return bookingService.cancelBooking(bookingId);
   }
 }

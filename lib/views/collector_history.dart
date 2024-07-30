@@ -1,75 +1,69 @@
+import 'package:capstone/controllers/booking_controller.dart';
 import 'package:capstone/controllers/collector_controller.dart';
-import 'package:capstone/models/collector_model.dart';
+import 'package:capstone/models/booking_model.dart';
 import 'package:capstone/services/api_service.dart';
+import 'package:capstone/services/booking_service.dart';
 import 'package:capstone/services/waste_collector_service.dart';
 import 'package:capstone/utils/constants.dart';
-import 'package:capstone/views/contact_card.dart';
+import 'package:capstone/utils/helpers.dart';
+import 'package:capstone/views/history_cards.dart';
 import 'package:flutter/material.dart';
 
-class CollectorHistory extends StatefulWidget {
-  const CollectorHistory({super.key});
+class UserHistory extends StatefulWidget {
+  const UserHistory({super.key});
 
   @override
-  State<CollectorHistory> createState() => _CollectorHistoryState();
+  State<UserHistory> createState() => _UserHistoryState();
 }
 
-class _CollectorHistoryState extends State<CollectorHistory> {
-  String collectorId = '';
-  late CollectorController _collectorController;
-  late Future<WasteCollector> _wasteCollector;
+class _UserHistoryState extends State<UserHistory> {
+  String userId = 'E5ZIRRES8yQBB0tYxYgf4xH561z1';
+  late ApiService apiService;
+  late Future<List<Booking>> collectorTripHistory;
+  late CollectorController collectorController;
+  late WasteCollectorService wasteCollectorService;
+  late BookingService bookingService;
+  String name = '';
 
   @override
   void initState() {
     super.initState();
-    ApiService apiService = ApiService(Constants.baseUrl);
-    WasteCollectorService wasteCollectorService =
-        WasteCollectorService(apiService);
-    _collectorController = CollectorController(wasteCollectorService);
-    _wasteCollector = _collectorController.viewCollectorHistory(collectorId);
+    apiService = ApiService(Constants.baseUrl);
+    bookingService = BookingService(apiService);
+    wasteCollectorService = WasteCollectorService(apiService);
+    collectorTripHistory =
+        BookingController(bookingService).getUserBookings(userId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: const Center(
-          child: Text(
-            'Waste Collectors',
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
+        title: const Text('Collector Trip History'),
       ),
-      resizeToAvoidBottomInset: false,
-      body: FutureBuilder<WasteCollector>(
-        future: _wasteCollector,
+      body: FutureBuilder<List<Booking>>(
+        future: collectorTripHistory,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          } else if (snapshot.hasData) {
-            List<WasteCollector> wasteCollectors =
-                snapshot.data! as List<WasteCollector>;
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No booking history available.'));
+          } else {
+            List<Booking> bookings = snapshot.data!;
             return ListView.builder(
-              itemCount: wasteCollectors.length,
+              itemCount: bookings.length,
               itemBuilder: (context, index) {
-                final wasteCollector = wasteCollectors[index];
-                return ContactCard(
-                  profileImage: wasteCollector.profilePicture,
-                  name:
-                      '${wasteCollector.firstName} ${wasteCollector.lastName}',
-                  phoneNumber: wasteCollector.phoneNumber,
+                Booking booking = bookings[index];
+                return HistoryCard(
+                  date: booking.timeRequested,
+                  price: booking.price,
+                  bins: booking.numberOfBins,
+                  collectorName:
+                      Helpers.getCollectorName(booking.collectorId!) as String,
                 );
               },
-            );
-          } else {
-            return const Center(
-              child: Text('No drivers found'),
             );
           }
         },

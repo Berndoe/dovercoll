@@ -1,54 +1,54 @@
 import 'package:flutter/material.dart';
 
-class HistoryCards extends StatelessWidget {
-  final int amount;
-  final DateTime time;
-  final String paymentMethod;
+class HistoryCard extends StatelessWidget {
+  final String date;
+  final double price;
+  final int bins;
+  final String collectorName;
 
-  const HistoryCards(
-      {super.key,
-      required this.amount,
-      required this.time,
-      required this.paymentMethod});
+  const HistoryCard({
+    super.key,
+    required this.date,
+    required this.price,
+    required this.bins,
+    required this.collectorName,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(8),
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'name',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'phoneNumber',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
+      elevation: 5.0,
+      margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Booking Date: $date',
+              style:
+                  const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.remove_red_eye_sharp, color: Colors.blue),
-            onPressed: () async {},
-          ),
-        ],
+            const SizedBox(height: 8.0),
+            Text(
+              'Price Paid: $price',
+              style: const TextStyle(fontSize: 16.0),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              'Number of Bins: $bins',
+              style: const TextStyle(fontSize: 16.0),
+            ),
+            const SizedBox(height: 8.0),
+            Text(
+              'Collector Name: $collectorName',
+              style: const TextStyle(fontSize: 16.0),
+            ),
+          ],
+        ),
       ),
     );
   }

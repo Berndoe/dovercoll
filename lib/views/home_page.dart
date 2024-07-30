@@ -462,33 +462,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Confirm Booking',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Text('Number of bins: ${_binNumberController.text}'),
-              Text('Location: ${_locationController.text}'),
-              // Replace with actual price calculation logic
-              const Text('Price: \$20'),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(context)
-                      .pop(); // Close the booking details sheet
-                  setState(() {
-                    _isBookingInProgress = true;
-                  });
-                  await bookCollector(); // Proceed with booking
-                },
-                child: const Text('Confirm'),
-              ),
-            ],
+        return Center(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Confirm Booking',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Text('Number of bins: ${_binNumberController.text}'),
+                Text('Location: ${_locationController.text}'),
+                // Replace with actual price calculation logic
+                Text(
+                    'Price: ${Helpers.calculatePrice(int.parse(_binNumberController.text))}'),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.of(context)
+                        .pop(); // Close the booking details sheet
+                    setState(() {
+                      _isBookingInProgress = true;
+                    });
+                    await bookCollector(); // Proceed with booking
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
+            ),
           ),
         );
       },

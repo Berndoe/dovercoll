@@ -1,20 +1,17 @@
-import 'package:capstone/views/collector_main_page.dart';
+import 'package:capstone/utils/constants.dart';
+import 'package:capstone/views/main_page.dart';
+import 'package:capstone/views/user_history.dart';
 import 'package:flutter/material.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized();
-  // await Permission.locationWhenInUse.isDenied.then((valueOfPermission) {
-  //   if (valueOfPermission) {
-  //     Permission.locationWhenInUse.request();
-  //   }
-  // });
-//   //Remove this method to stop OneSignal Debugging
-//   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-//
-//   OneSignal.initialize(Constants.oneSignalID);
-//
-// // The promptForPushNotificationsWithUserResponse function will show the iOS or Android push notification prompt.
-//   OneSignal.Notifications.requestPermission(true);
+  WidgetsFlutterBinding.ensureInitialized();
+
+  OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+
+  OneSignal.initialize(Constants.oneSignalID);
+
+  OneSignal.Notifications.requestPermission(true);
 
   runApp(const MyApp());
 }
@@ -26,12 +23,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'DoverColl',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const CollectorMainPage(),
+      home: const UserHistory(),
+      initialRoute: '/home',
+      routes: {'/home': (context) => const UserMainPage()},
     );
   }
 }
