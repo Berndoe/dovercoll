@@ -8,8 +8,10 @@ from flask import Flask, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, db
 from flask_cors import CORS
-from classes.firebase_user_manager import FirebaseManager
+from firebase_user_manager import FirebaseManager
 from geopy.distance import geodesic
+from twilio.rest import Client
+
 
 # initialise flask app
 app = Flask(__name__)
@@ -28,7 +30,8 @@ waste_collector_manager = FirebaseManager('collectors')
 MAX_DISTANCE_KM = 15
 PRICE = 20
 DISCOUNT_FACTOR = 0.1
-RESPONSE_WAIT_TIME = 10
+RESPONSE_WAIT_TIME = 5
+GH_CODE = '+233'
 
 
 # problem: register stores password
@@ -197,26 +200,33 @@ def order_collection_service():
 
         user_location = (pickup_location['latitude'], pickup_location['longitude'])
         nearby_waste_collectors = find_nearby_collectors(user_location)
+        print(nearby_waste_collectors)
 
         if not nearby_waste_collectors:
             return jsonify({"error": "No collectors available nearby. "
                                      "Try calling from the driver section"}), 404
 
-        booking_data['status'] = 'pending'
-
-        booking_id = user_manager.create_booking(booking_data)
-        booking_data.update({
-            'booking_id': booking_id,
+        booking_data = {
+            'user_id': user_id,
+            'number_of_bins': number_of_bins,
             'status': 'pending',
             'price': price if number_of_bins <= 2 else (price - (price * DISCOUNT_FACTOR)),
-            'time_requested': datetime.datetime.now().isoformat()
+            'time_requested': str(f'{datetime.datetime.now().now()}'),
+            'location': {
+                'longitude': user_location[0],
+                'latitude': user_location[1]
+            }
+        }
+
+        booking_id = user_manager.create_booking(booking_data)
+        user_manager.update_booking(booking_id, {
+            'booking_id': booking_id,
         })
 
         threading.Thread(target=wait_for_collector_response, args=(booking_id,)).start()
 
-        return jsonify({"booking_id": booking_id, "nearby_waste_collectors": nearby_waste_collectors,
-                        "price": booking_data['price'],
-                        "time_requested": booking_data['time_requested']}), 201
+        return jsonify({"booking_data": booking_data,
+                        "nearby_waste_collectors": nearby_waste_collectors}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -229,18 +239,18 @@ def find_nearby_collectors(user_location):
 
     if collectors:
         for collector_id, collector_data in collectors.items():
-            if 'pickup_location' in collector_data and collector_data['pickup_location']:
+            if 'location' in collector_data and collector_data['location']:
                 collector_location = (
-                    collector_data['pickup_location']['latitude'],
-                    collector_data['pickup_location']['longitude']
+                    collector_data['location']['latitude'],
+                    collector_data['location']['longitude']
                 )
 
                 distance = geodesic(user_location, collector_location).km
 
                 if distance <= MAX_DISTANCE_KM:
-                    nearby_collectors.append({"collector_id": collector_id, "distance": distance})
+                    nearby_collectors.append({"collector_id": collector_id})
 
-    return sorted(nearby_collectors, key=lambda k: k['distance'])
+    return nearby_collectors
 
 
 @app.route('/collectors/respond', methods=['POST'])
@@ -263,7 +273,7 @@ def collector_response():
 
         user_manager.update_booking(booking_id, {'collector_id': collector_id, 'status': 'ongoing'})
 
-        return jsonify({"message": "Booking accepted", "booking_id": booking_id}), 200
+        return jsonify({"message": "Booking accepted", "booking_id": booking_id, "collector_id": collector_id}), 201
 
     except Exception as e:
         return jsonify({"error": f"Error in collector response: {str(e)}"}), 400
@@ -275,6 +285,21 @@ def wait_for_collector_response(booking_id):
     if booking_data and booking_data.get('status') == 'pending':
         print("Booking data " + str(booking_data))
         user_manager.cancel_booking(booking_id)
+
+
+@app.route('/bookings', methods=['GET'])
+def get_bookings():
+    try:
+        db_ref = db.reference('bookings')
+        bookings = db_ref.get()
+
+        if bookings:
+            return jsonify({"bookings": bookings}), 200
+
+        return jsonify({"message": "No bookings available"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route('/users/booking/<bid>', methods=['GET'])
@@ -379,6 +404,32 @@ def view_history_collector(cid):
         return jsonify({"history": collector_history}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
+@app.route('/notifications/sms', methods=['POST'])
+def send_message():
+    # Extract phone_number from the request data
+    data = request.get_json()
+    phone_number = data.get('phone_number')
+
+    if not phone_number:
+        return jsonify({"error": "Phone number is required"}), 400
+
+    # Twilio credentials
+    account_sid = 'AC91ea638b76507e0dc51ce6ea71e1d372'
+    auth_token = '4bd57e32cd0359b06bb424a74980958e'
+
+    client = Client(account_sid, auth_token)
+
+    formatted_number = f"{GH_CODE}{phone_number[1:]}"
+
+    # Send the message
+    message = client.messages.create(
+        body='Your bin is full!',  # Message content
+        from_='+12512930904',  # Replace with your Twilio number
+        to=formatted_number
+    )
+    return jsonify({"message": "Message sent", "sid": message.sid}), 201
 
 
 if __name__ == '__main__':
