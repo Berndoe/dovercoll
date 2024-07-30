@@ -416,8 +416,8 @@ def send_message():
         return jsonify({"error": "Phone number is required"}), 400
 
     # Twilio credentials
-    account_sid = 'AC91ea638b76507e0dc51ce6ea71e1d372'
-    auth_token = '4bd57e32cd0359b06bb424a74980958e'
+    account_sid = ''
+    auth_token = ''
 
     client = Client(account_sid, auth_token)
 
