@@ -17,12 +17,16 @@ class FirebaseManager(AbstractUser):
         except Exception as e:
             return {'error': str(e)}
 
-    def login(self, email, password):
-        try:
-            user = auth.get_user_by_email(email)
-            return {'message': 'User found', 'uid': user.uid}
-        except Exception as e:
-            return {'error': str(e)}
+    def login(email, password):
+        url = f'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_API_KEY}'
+        payload = {
+            'email': email,
+            'password': password,
+            'returnSecureToken': True
+        }
+    
+        response = requests.post(url, json=payload)
+        return response.json()
 
     def get(self):
         return db.reference(f'{self.user_type}').get()
