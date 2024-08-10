@@ -1,0 +1,71 @@
+.nav-item {
+    margin-left: 200px;
+    padding-left:50%;
+    font-size: 18px;
+}
+
+td button:nth-child(1){background-color: #0298cf;}
+
+td button:nth-child(2) {background-color: #f80000;}
+
+tr:hover td {color: #0298cf;}
+
+.new_button{
+    background-color:#0298cf;
+    color: white;
+    border-radius: 4px;
+    border-color: none;
+  
+    outline-style: hidden;
+    padding: 6px;                         
+}   
+
+.btn-outline:hover {
+  background-color:#0298cf;
+  color: white;
+}
+
+/* back button */
+.btn-secondary {
+    padding-left:40px;
+    padding-right:40px;
+    margin-left:70px;
+}
+
+/* delete button */
+.delBtn {
+    padding-left:40px;
+    padding-right:40px;
+}
+
+.modal-title {
+    margin-left:160px;
+}
+
+td button:nth-child(1) {
+  background-color: #0298cf;
+}
+
+td button:nth-child(2) {
+  background-color: #f80000;
+}
+
+tr:hover td {
+  color: #0298cf;
+}
+
+tr {
+  width: 100%;
+
+}
+
+td {
+  text-align: center;
+}
+
+#assetModal {
+    margin-left: 170px;
+}
+
+
+
