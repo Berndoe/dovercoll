@@ -67,7 +67,25 @@ def register_collector():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route('/login', methods=['POST'])
+def login_user():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
 
+    result = user_manager.login(email, password)
+    
+    if 'error' in result:
+        return jsonify({'error': result['error']['message']}), 400
+    else:
+        return jsonify({
+            'message': 'Login successful',
+            'idToken': result['idToken'],
+            'refreshToken': result['refreshToken'],
+            'expiresIn': result['expiresIn'],
+            'localId': result['localId'],
+            'email': result['email']
+        }), 200
 @app.route('/users', methods=['GET'])
 def get_users():
     try:
