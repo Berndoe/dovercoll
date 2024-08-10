@@ -27,7 +27,7 @@ class _PaymentState extends State<Payment> {
                   PayWithPayStack().now(
                       context: context,
                       secretKey:
-                          "sk_test_5a7b15f6a90a316cd60682159f883241307043c4",
+                          "",
                       customerEmail: "bernd.opoku.boadu@gmail.com",
                       reference: uniqueTransRef,
                       currency: "GHS",
