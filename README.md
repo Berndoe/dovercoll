@@ -96,6 +96,8 @@
 
 
 ## Project Structure
+
+```
 ├── controllers/
 │   ├── booking_controller.dart         # Handles operations related to bookings
 │   ├── collector_controller.dart       # Manages functions related to waste collectors
@@ -137,7 +139,15 @@
 │   ├── profile_page.dart               # UI for the user's profile page
 │   ├── register.dart                   # UI for the registration screen
 │   ├── user_history.dart               # UI for displaying a user's history
+```
 
+### Directory Descriptions
+
+- **controllers/**: Contains files that manage and process the main operations and data flow within the application.
+- **models/**: Includes all the data models used in the app, defining the structure of the data handled by the app.
+- **services/**: Holds service files responsible for API communication, data management, and business logic.
+- **utils/**: Contains utility functions, constants, and state management files used across the app.
+- **views/**: Includes all UI components, screens, and widgets that make up the user interface of the application.
 
 ## License
 
