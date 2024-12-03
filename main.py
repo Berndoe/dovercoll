@@ -19,8 +19,8 @@ CORS(app)
 # initialise firebase admin sdk
 cred = credentials.Certificate('dovercoll_key.json')
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://dovercoll-623b6-default-rtdb.firebaseio.com/',
-    'storageBucket': 'dovercoll-623b6.appspot.com'
+    'databaseURL': '',
+    'storageBucket': ''
 })
 
 # instantiate firebase manager for users and waste collectors
