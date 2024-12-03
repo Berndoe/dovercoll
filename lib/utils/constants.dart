@@ -9,11 +9,11 @@ class Constants {
   static const String wastePracticesEndpoint = '$baseUrl/practices';
   static const String binLevelEndpoint = '$baseUrl/get_bin_level';
   static const String collectorsResponse = '/collectors/respond';
-  static const String googleMapKey = "AIzaSyD5PoPVX3cV7AxDSUac18VyjJsiXk4sVpM";
-  static const String placesKey = "AIzaSyCQNX55vb5N92Oe76vu_Z9Iu498q40e8WU";
+  static const String googleMapKey = "";
+  static const String placesKey = "";
   static const String pending = "pending";
   static const String ongoing = "ongoing";
   static const String completed = "completed";
-  static const String oneSignalID = "657673a8-a3d2-47b6-8147-0053769da5bb";
+  static const String oneSignalID = "";
   static const int basePrice = 20;
 }
